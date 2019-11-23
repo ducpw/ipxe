@@ -1,0 +1,79 @@
+install
+lang en_GB.UTF-8
+keyboard us
+timezone Asia/Jakarta
+auth --useshadow --enablemd5
+selinux --disabled   
+firewall --disabled  
+services --enabled=NetworkManager,sshd
+#services --disabled=initial-setup-text
+#initial-setup-text --disabled
+firstboot --disable  
+eula --agreed
+ignoredisk --only-use=sda
+reboot
+
+xconfig  --startxonboot
+bootloader --location=mbr
+zerombr
+clearpart --all --initlabel
+autopart
+#part swap --asprimary --fstype="swap" --size=1024
+##part /boot --fstype ext4 --size=200
+#part pv.01 --size=1 --grow
+#volgroup rootvg01 pv.01
+#logvol / --fstype ext4 --name=lv01 --vgname=rootvg01 --size=1 --grow
+
+rootpw 123456
+user --name=asd --password=123123
+
+repo --name=base --baseurl=http://mirror.cogentco.com/pub/linux/centos/7/os/x86_64/
+url --url="http://mirror.cogentco.com/pub/linux/centos/7/os/x86_64/"
+
+#url --url http://mirror.centos.org/centos/7/os/x86_64/
+#repo --name=base --baseurl=http://mirror.centos.org/centos/7/os/x86_64/
+repo --name=epel --baseurl=http://download.fedoraproject.org/pub/epel/7/x86_64/
+repo --name=updates --baseurl=http://mirror.cogentco.com/pub/linux/centos/7/updates/x86_64/
+
+
+%packages
+@^graphical-server-environment
+@base
+@core
+@desktop-debugging   
+@dial-up
+@fonts
+@gnome-desktop
+@guest-agents
+@guest-desktop-agents
+@input-methods
+@internet-browser
+@multimedia
+@print-client
+@x11
+chrony
+kexec-tools
+
+%end
+
+%addon com_redhat_kdump --enable --reserve-mb='auto'
+
+%end
+
+%post
+
+systemctl disable initial-setup-graphical.service
+chmod a+x /etc/rc.d/rc.local
+
+echo '
+if ! (which docker > /dev/null 2>&1); then
+
+        curl "https://gitlab.com/symmetric-ds.tar" > /opt/symmetric-ds.tar
+        cd /opt/;tar -xvf symmetric-ds.tar;
+        mkdir -p /opt/webapps/jspapps;
+        echo "jspapps put here" >> /opt/webapps/jspapps/index.jsp;
+        curl "http://url/install-docker-centos7.sh" > /usr/src/install-docker.sh
+        /bin/bash -x /usr/src/install-docker.sh 2>&1 | tee /usr/src/debug-install.log
+fi
+' >> /etc/rc.d/rc.local
+

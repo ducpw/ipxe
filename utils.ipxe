@@ -1,0 +1,109 @@
+#!ipxe
+
+menu Utilities
+item --gap Utilities:
+item alt_linux_rescue ${space} ALT Linux Rescue
+item avg ${space} AVG Rescue CD
+item breakin ${space} Breakin
+item clonezilla ${space} Clonezilla
+item dban ${space} DBAN
+item gparted ${space} GParted
+item memtest-501 ${space} Memtest86+ 5.01
+item supergrub ${space} Super Grub2 Disk
+item sysrcd ${space} SystemRescueCD
+item ubcd ${space} Ultimate Boot CD (UBCD)
+choose --default ${menu} menu || goto utils_exit
+echo ${cls}
+goto ${menu} ||
+chain ${menu}.ipxe || goto utils_exit
+goto utils_exit
+
+:alt_linux_rescue
+iseq ${arch} x86_64 && goto alt_linux_rescue_x64 ||
+set util_path mirrors.yun-idc.com/ALTLinux/p8/images/rescue/alt-p8-rescue-20190312-i586.iso
+set util_file alt-p8-rescue-20190312-i586.iso
+goto boot_memdisk
+
+:alt_linux_rescue_x64
+set util_path mirrors.yun-idc.com/ALTLinux/p8/images/rescue/alt-p8-rescue-20190312-x86_64.iso
+set util_file alt-p8-rescue-20190312-x86_64.iso
+goto boot_memdisk
+
+:avg
+set avg_version 160420a12074
+set util_path download.avg.com/filedir/inst/avg_arl_cdi_all_120_${avg_version}.iso
+set util_file avg_arl_cdi_all_120_${avg_version}.iso
+goto boot_memdisk
+
+:breakin
+set breakin_version 4.26.1-53
+set util_path www.advancedclustering.com/wp-content/uploads/2017/02/bootimage-${breakin_version}.iso
+set util_file bootimage-${breakin_version}.iso
+goto boot_memdisk
+
+:clonezilla
+set clonezilla_version 2.6.2-15
+set util_path master.dl.sourceforge.net/project/clonezilla/clonezilla_live_stable/${clonezilla_version}/clonezilla-live-${clonezilla_version}-amd64.iso
+set util_file clonezilla-live-${clonezilla_version}-amd64.iso
+goto boot_memdisk
+
+:dban
+set dban_version 2.3.0
+set util_path master.dl.sourceforge.net/project/dban/dban/dban-${dban_version}/dban-${dban_version}_i586.iso
+set util_file dban-${dban_version}_i586.iso
+goto boot_memdisk
+
+:gparted
+set gparted_version 1.0.0-3
+set util_path master.dl.sourceforge.net/project/gparted/gparted-live-stable/${gparted_version}/gparted-live-${gparted_version}-amd64.iso
+set util_file gparted-live-${gparted_version}-amd64.iso
+goto boot_memdisk
+
+:memtest-501
+set util_path boot.duc.pw/memtest86-5.01.0
+set util_file memtest86-5.01.0
+goto boot_memtest
+
+:supergrub
+set supergrub_version 2.04s1
+set util_path master.dl.sourceforge.net/project/supergrub2/${supergrub_version}/super_grub2_disk_${supergrub_version}/super_grub2_disk_hybrid_${supergrub_version}.iso
+set util_file super_grub2_disk_hybrid_${supergrub_version}.iso
+goto boot_memdisk
+
+:sysrcd
+set sysrcdpath master.dl.sourceforge.net/project/netboot-xyz/distros/sysresccd-x86/4.8.1
+kernel --name altker64 https://${sysrcdpath}/altker64 setkmap=no net.ifnames=0 backstore=off
+initrd --name initram.igz https://${sysrcdpath}/initram.igz
+initrd --name sysrcd.dat https://${sysrcdpath}/sysrcd.dat /sysrcd.dat
+boot
+goto utils_exit
+
+:ubcd
+set util_path mirror.sysadminguide.net/ubcd/ubcd538.iso
+set util_file ubcd538.iso
+goto boot_memdisk
+
+:boot_memdisk
+imgfree
+kernel ${memdisk} iso raw
+initrd --name ${util_file} http://${util_path}
+boot
+goto utils_exit
+
+:boot_memtest
+chain https://${util_path} && goto main_menu ||
+goto utils_exit
+
+:testdistro
+echo This option will allow you to test booting an ISO using memdisk. Please
+echo specify the URL of the ISO you want to test and it will automatically
+echo attempt to load the ISO using memdisk.
+echo -n URL: ${} && read distro_iso
+kernel ${memdisk} iso raw
+initrd ${distro_iso}
+boot
+goto utils_exit
+
+:utils_exit
+clear menu
+exit 0

@@ -1,0 +1,27 @@
+#!ipxe
+
+# IPFire
+# https://www.ipfire.org/
+
+goto ${menu} ||
+
+:ipfire
+clear osversion
+set os IPFire
+menu ${os}
+item 2.21-core126 ${space} ${os} 2.21 Core 126
+isset ${osversion} || choose osversion || goto linux_menu
+echo ${cls}
+set ipfire_mirror downloads.ipfire.org
+set dir releases/ipfire-2.x/${osversion}/images/x86_64
+goto ipfire_images
+
+:ipfire_images
+imgfree
+kernel https://${ipfire_mirror}/${dir}/vmlinuz ${console} vga=791 initrd=instroot
+initrd https://${ipfire_mirror}/${dir}/instroot
+boot
+
+:ipfire_exit
+clear menu
+exit 0
